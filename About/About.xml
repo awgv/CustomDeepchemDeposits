@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+	<packageId>awgv.VanillaChemfuelExpanded.CustomDeepchemDeposits</packageId>
+	<name>Custom deepchem deposits — a Vanilla Chemfuel Expanded patch</name>
+	<author>J</author>
+	<supportedVersions>
+		<li>1.4</li>
+	</supportedVersions>
+	<modDependencies>
+		<li>
+			<packageId>VanillaExpanded.VChemfuelE</packageId>
+			<displayName>Vanilla Chemfuel Expanded</displayName>
+			<steamWorkshopUrl>steam://url/CommunityFilePage/2792917473</steamWorkshopUrl>
+		</li>
+	</modDependencies>
+	<description>The mod is a Vanilla Chemfuel Expanded patch that rebalances the amount of deepchem found using a ground-penetrating scanner and allows it to be changed in the settings.</description>
+</ModMetaData>
