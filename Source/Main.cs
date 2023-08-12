@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using System.Collections.Generic;
+using System.Xml;
 
 using UnityEngine;
 using Verse;
@@ -8,17 +9,21 @@ namespace CustomDeepchemDeposits
     public class Settings : ModSettings
     {
         public int deepCountPerCell = 4;
+        public int deepchemTankStorageCapacity = 120;
+        public int chemfuelTankStorageCapacity = 1350;
 
         public override void ExposeData()
         {
             Scribe_Values.Look(ref deepCountPerCell, "deepCountPerCell");
+            Scribe_Values.Look(ref deepchemTankStorageCapacity, "deepchemTankStorageCapacity");
+            Scribe_Values.Look(ref chemfuelTankStorageCapacity, "chemfuelTankStorageCapacity");
             base.ExposeData();
         }
     }
 
     public class CustomDeepchemDepositsMod : Mod
     {
-        Settings settings;
+        readonly Settings settings;
 
         public CustomDeepchemDepositsMod(ModContentPack content)
             : base(content)
@@ -32,16 +37,45 @@ namespace CustomDeepchemDeposits
 
             listingStandard.Begin(inRect);
             listingStandard.Label("(!) Restart the game to apply the changes.");
-            listingStandard.Gap(24f);
+            listingStandard.Gap(48f);
+
             listingStandard.Label(
                 "Amount of deepchem available per cell (VCE’s default is 300; 1 deepchem becomes 3 chemfuel):"
             );
             listingStandard.ColumnWidth = inRect.width / 8;
 
-            string buffer = settings.deepCountPerCell.ToString();
+            string deepCountPerCellBuffer = settings.deepCountPerCell.ToString();
             listingStandard.TextFieldNumeric(
                 ref settings.deepCountPerCell,
-                ref buffer,
+                ref deepCountPerCellBuffer,
+                0.0f,
+                65000.0f
+            );
+            listingStandard.Gap(24f);
+
+            listingStandard.ColumnWidth = inRect.width;
+            listingStandard.Label("Deepchem tank storage capacity:");
+            listingStandard.ColumnWidth = inRect.width / 8;
+
+            string deepchemTankStorageCapacityBuffer =
+                settings.deepchemTankStorageCapacity.ToString();
+            listingStandard.TextFieldNumeric(
+                ref settings.deepchemTankStorageCapacity,
+                ref deepchemTankStorageCapacityBuffer,
+                0.0f,
+                65000.0f
+            );
+            listingStandard.Gap(24f);
+
+            listingStandard.ColumnWidth = inRect.width;
+            listingStandard.Label("Chemfuel tank storage capacity:");
+            listingStandard.ColumnWidth = inRect.width / 8;
+
+            string chemfuelTankStorageCapacityBuffer =
+                settings.chemfuelTankStorageCapacity.ToString();
+            listingStandard.TextFieldNumeric(
+                ref settings.chemfuelTankStorageCapacity,
+                ref chemfuelTankStorageCapacityBuffer,
                 0.0f,
                 65000.0f
             );
@@ -58,28 +92,37 @@ namespace CustomDeepchemDeposits
 
     public class PatchOperationUseSettings : PatchOperation
     {
-        private Settings settings = LoadedModManager
+        private readonly Settings settings = LoadedModManager
             .GetMod<CustomDeepchemDepositsMod>()
             .GetSettings<Settings>();
 
         protected override bool ApplyWorker(XmlDocument xml)
         {
-            bool result = false;
+            XmlNode xmlNode;
 
-            foreach (
-                var defNode in xml.SelectNodes(
-                    "Defs/ThingDef[defName=\"VCHE_Deepchem\"]/deepCountPerCell"
-                )
-            )
+            Dictionary<string, int> xpathToValueMap = new Dictionary<string, int>()
             {
-                result = true;
+                {
+                    "Defs/ThingDef[defName=\"VCHE_Deepchem\"]/deepCountPerCell",
+                    settings.deepCountPerCell
+                },
+                {
+                    "Defs/ThingDef[defName=\"PS_DeepchemTank\"]/comps/li[@Class=\"PipeSystem.CompProperties_ResourceStorage\"]/storageCapacity",
+                    settings.deepchemTankStorageCapacity
+                },
+                {
+                    "Defs/ThingDef[defName=\"PS_ChemfuelTank\"]/comps/li[@Class=\"PipeSystem.CompProperties_ResourceStorage\"]/storageCapacity",
+                    settings.chemfuelTankStorageCapacity
+                },
+            };
 
-                var xmlNode = defNode as XmlNode;
-
-                xmlNode.InnerText = settings.deepCountPerCell.ToString();
+            foreach (KeyValuePair<string, int> pair in xpathToValueMap)
+            {
+                xmlNode = xml.SelectSingleNode(pair.Key);
+                xmlNode.InnerText = pair.Value.ToString();
             }
 
-            return result;
+            return true;
         }
     }
 }
